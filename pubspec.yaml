@@ -1,0 +1,41 @@
+name: completesend
+description: A Flutter app for managing contact groups and sending templated messages
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.2.0 <4.0.0'
+  flutter: '>=3.16.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # UI/UX
+  cupertino_icons: ^1.0.6
+  
+  # Contacts and Permissions
+  contacts_service: ^0.6.3
+  permission_handler: ^11.0.1
+  
+  # External Communication
+  url_launcher: ^6.2.1
+  
+  # File Handling
+  csv: ^6.0.0
+  file_picker: ^6.1.1
+  share_plus: ^7.2.1
+  path_provider: ^2.1.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+  
+  # If you have any assets, uncomment and add them here:
+  # assets:
+  #   - images/
+  #   - assets/
