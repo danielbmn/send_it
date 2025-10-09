@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:contacts_service/contacts_service.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:csv/csv.dart';
 import 'package:file_picker/file_picker.dart';
@@ -37,7 +36,7 @@ class ContactGroup {
   String id;
   String name;
   List<Contact> contacts;
-  
+
   ContactGroup({required this.id, required this.name, required this.contacts});
 }
 
@@ -45,8 +44,9 @@ class MessageTemplate {
   String id;
   String name;
   String content;
-  
-  MessageTemplate({required this.id, required this.name, required this.content});
+
+  MessageTemplate(
+      {required this.id, required this.name, required this.content});
 }
 
 class HomeScreen extends StatefulWidget {
@@ -58,7 +58,15 @@ class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
   List<ContactGroup> _groups = [];
   List<MessageTemplate> _templates = [];
-  
+
+  @override
+  void initState() {
+    super.initState();
+    // Don't check permissions on startup at all
+    // Only check when user actually tries to use contacts
+    print('🚀 App started - no permission check on startup');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -66,16 +74,17 @@ class _HomeScreenState extends State<HomeScreen> {
         child: IndexedStack(
           index: _selectedIndex,
           children: [
-            GroupsScreen(groups: _groups, onGroupsChanged: (groups) {
-              setState(() => _groups = groups);
-            }),
+            GroupsScreen(
+                groups: _groups,
+                onGroupsChanged: (groups) {
+                  setState(() => _groups = groups);
+                }),
             TemplatesScreen(
-              templates: _templates, 
-              groups: _groups,
-              onTemplatesChanged: (templates) {
-                setState(() => _templates = templates);
-              }
-            ),
+                templates: _templates,
+                groups: _groups,
+                onTemplatesChanged: (templates) {
+                  setState(() => _templates = templates);
+                }),
             SendScreen(groups: _groups, templates: _templates),
           ],
         ),
@@ -119,9 +128,9 @@ class _HomeScreenState extends State<HomeScreen> {
 class GroupsScreen extends StatefulWidget {
   final List<ContactGroup> groups;
   final Function(List<ContactGroup>) onGroupsChanged;
-  
+
   GroupsScreen({required this.groups, required this.onGroupsChanged});
-  
+
   @override
   _GroupsScreenState createState() => _GroupsScreenState();
 }
@@ -131,7 +140,8 @@ class _GroupsScreenState extends State<GroupsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Contact Groups', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: Text('Contact Groups',
+            style: TextStyle(fontWeight: FontWeight.bold)),
         actions: [
           IconButton(
             icon: Icon(CupertinoIcons.square_arrow_down),
@@ -144,64 +154,70 @@ class _GroupsScreenState extends State<GroupsScreen> {
         ],
       ),
       body: widget.groups.isEmpty
-        ? Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(CupertinoIcons.person_3, size: 64, color: Color(0xFFD1D1D6)),
-                SizedBox(height: 16),
-                Text('No groups yet', style: TextStyle(fontSize: 18, color: Color(0xFF8E8E93))),
-                SizedBox(height: 8),
-                Text('Tap + to create a group', style: TextStyle(color: Color(0xFF8E8E93))),
-              ],
-            ),
-          )
-        : ListView.builder(
-            padding: EdgeInsets.all(16),
-            itemCount: widget.groups.length,
-            itemBuilder: (context, index) {
-              final group = widget.groups[index];
-              return Container(
-                margin: EdgeInsets.only(bottom: 12),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.04),
-                      blurRadius: 8,
-                      offset: Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: ListTile(
-                  contentPadding: EdgeInsets.all(16),
-                  title: Text(
-                    group.name,
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-                  ),
-                  subtitle: Text(
-                    '${group.contacts.length} contacts',
-                    style: TextStyle(color: Color(0xFF8E8E93)),
-                  ),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: Icon(CupertinoIcons.pencil, color: Color(0xFF007AFF)),
-                        onPressed: () => _editGroup(group),
-                      ),
-                      IconButton(
-                        icon: Icon(CupertinoIcons.trash, color: Color(0xFFFF3B30)),
-                        onPressed: () => _deleteGroup(group),
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(CupertinoIcons.person_3,
+                      size: 64, color: Color(0xFFD1D1D6)),
+                  SizedBox(height: 16),
+                  Text('No groups yet',
+                      style: TextStyle(fontSize: 18, color: Color(0xFF8E8E93))),
+                  SizedBox(height: 8),
+                  Text('Tap + to create a group',
+                      style: TextStyle(color: Color(0xFF8E8E93))),
+                ],
+              ),
+            )
+          : ListView.builder(
+              padding: EdgeInsets.all(16),
+              itemCount: widget.groups.length,
+              itemBuilder: (context, index) {
+                final group = widget.groups[index];
+                return Container(
+                  margin: EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.04),
+                        blurRadius: 8,
+                        offset: Offset(0, 2),
                       ),
                     ],
                   ),
-                  onTap: () => _viewGroupDetails(group),
-                ),
-              );
-            },
-          ),
+                  child: ListTile(
+                    contentPadding: EdgeInsets.all(16),
+                    title: Text(
+                      group.name,
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                    ),
+                    subtitle: Text(
+                      '${group.contacts.length} contacts',
+                      style: TextStyle(color: Color(0xFF8E8E93)),
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: Icon(CupertinoIcons.pencil,
+                              color: Color(0xFF007AFF)),
+                          onPressed: () => _editGroup(group),
+                        ),
+                        IconButton(
+                          icon: Icon(CupertinoIcons.trash,
+                              color: Color(0xFFFF3B30)),
+                          onPressed: () => _deleteGroup(group),
+                        ),
+                      ],
+                    ),
+                    onTap: () => _viewGroupDetails(group),
+                  ),
+                );
+              },
+            ),
       floatingActionButton: FloatingActionButton(
         onPressed: _createGroup,
         backgroundColor: Color(0xFF007AFF),
@@ -210,20 +226,34 @@ class _GroupsScreenState extends State<GroupsScreen> {
       ),
     );
   }
-  
+
   void _createGroup() async {
-    final result = await Navigator.push(
-      context,
-      CupertinoPageRoute(builder: (context) => CreateGroupScreen()),
-    );
-    if (result != null) {
-      setState(() {
-        widget.groups.add(result);
-        widget.onGroupsChanged(widget.groups);
-      });
+    // Try to get contacts directly - this will trigger permission request
+    print('🔐 Attempting to access contacts directly...');
+    try {
+      await ContactsService.getContacts(withThumbnails: false);
+      print('✅ Successfully accessed contacts, opening create group screen');
+
+      final result = await Navigator.push(
+        context,
+        CupertinoPageRoute(builder: (context) => CreateGroupScreen()),
+      );
+      if (result != null) {
+        setState(() {
+          widget.groups.add(result);
+          widget.onGroupsChanged(widget.groups);
+        });
+      }
+    } catch (e) {
+      print('❌ Error accessing contacts: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Contacts permission is required to create groups'),
+        ),
+      );
     }
   }
-  
+
   void _editGroup(ContactGroup group) async {
     final result = await Navigator.push(
       context,
@@ -237,7 +267,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
       });
     }
   }
-  
+
   void _deleteGroup(ContactGroup group) {
     showCupertinoDialog(
       context: context,
@@ -264,7 +294,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
       ),
     );
   }
-  
+
   void _viewGroupDetails(ContactGroup group) {
     Navigator.push(
       context,
@@ -273,63 +303,65 @@ class _GroupsScreenState extends State<GroupsScreen> {
       ),
     );
   }
-  
+
   void _exportGroups() async {
     List<List<dynamic>> csvData = [
       ['Group Name', 'Contact Name', 'Phone Number'],
     ];
-    
+
     for (var group in widget.groups) {
       for (var contact in group.contacts) {
         csvData.add([
           group.name,
           contact.displayName ?? '',
-          contact.phones?.isNotEmpty == true ? contact.phones!.first.value ?? '' : '',
+          contact.phones?.isNotEmpty == true
+              ? contact.phones!.first.value ?? ''
+              : '',
         ]);
       }
     }
-    
+
     String csv = const ListToCsvConverter().convert(csvData);
     final directory = await getApplicationDocumentsDirectory();
     final file = File('${directory.path}/contact_groups.csv');
     await file.writeAsString(csv);
-    
+
     await Share.shareXFiles([XFile(file.path)], text: 'Contact Groups Export');
   }
-  
+
   void _importGroups() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['csv'],
     );
-    
+
     if (result != null) {
       final file = File(result.files.single.path!);
       final csvString = await file.readAsString();
       final csvData = const CsvToListConverter().convert(csvString);
-      
+
       Map<String, List<Contact>> groupsMap = {};
-      
+
       for (var i = 1; i < csvData.length; i++) {
         final row = csvData[i];
         if (row.length >= 3) {
           final groupName = row[0].toString();
           final contactName = row[1].toString();
           final phoneNumber = row[2].toString();
-          
+
           if (!groupsMap.containsKey(groupName)) {
             groupsMap[groupName] = [];
           }
-          
+
           final contact = Contact(
             displayName: contactName,
             phones: [Item(value: phoneNumber)],
           );
-          
+
           groupsMap[groupName]!.add(contact);
         }
       }
-      
+
       setState(() {
         for (var entry in groupsMap.entries) {
           widget.groups.add(ContactGroup(
@@ -340,7 +372,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
         }
         widget.onGroupsChanged(widget.groups);
       });
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Groups imported successfully')),
       );
@@ -350,9 +382,9 @@ class _GroupsScreenState extends State<GroupsScreen> {
 
 class CreateGroupScreen extends StatefulWidget {
   final ContactGroup? group;
-  
+
   CreateGroupScreen({this.group});
-  
+
   @override
   _CreateGroupScreenState createState() => _CreateGroupScreenState();
 }
@@ -363,7 +395,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
   List<Contact> _allContacts = [];
   bool _loading = true;
   String _errorMessage = '';
-  
+
   @override
   void initState() {
     super.initState();
@@ -373,31 +405,19 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
     }
     _loadContacts();
   }
-  
+
   Future<void> _loadContacts() async {
     try {
-      final permissionStatus = await Permission.contacts.status;
-      
-      if (!permissionStatus.isGranted) {
-        final permission = await Permission.contacts.request();
-        
-        if (!permission.isGranted) {
-          setState(() {
-            _loading = false;
-            _errorMessage = 'Contacts permission is required to create groups';
-          });
-          return;
-        }
-      }
-      
+      print('🔍 Loading contacts...');
+
       final contacts = await ContactsService.getContacts(withThumbnails: false);
       final contactsList = contacts.where((contact) {
-        return contact.displayName != null && 
-               contact.displayName!.isNotEmpty &&
-               contact.phones != null &&
-               contact.phones!.isNotEmpty;
+        return contact.displayName != null &&
+            contact.displayName!.isNotEmpty &&
+            contact.phones != null &&
+            contact.phones!.isNotEmpty;
       }).toList();
-      
+
       setState(() {
         _allContacts = contactsList;
         _loading = false;
@@ -412,7 +432,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
       });
     }
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -425,24 +445,26 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
         ),
         actions: [
           CupertinoButton(
-            child: Text('Save', 
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: (_nameController.text.isNotEmpty && _selectedContacts.isNotEmpty)
-                  ? Color(0xFF007AFF)
-                  : Color(0xFF8E8E93),
-              )
-            ),
-            onPressed: (_nameController.text.isNotEmpty && _selectedContacts.isNotEmpty)
-              ? () {
-                  final group = ContactGroup(
-                    id: widget.group?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
-                    name: _nameController.text,
-                    contacts: _selectedContacts,
-                  );
-                  Navigator.pop(context, group);
-                }
-              : null,
+            child: Text('Save',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: (_nameController.text.isNotEmpty &&
+                          _selectedContacts.isNotEmpty)
+                      ? Color(0xFF007AFF)
+                      : Color(0xFF8E8E93),
+                )),
+            onPressed: (_nameController.text.isNotEmpty &&
+                    _selectedContacts.isNotEmpty)
+                ? () {
+                    final group = ContactGroup(
+                      id: widget.group?.id ??
+                          DateTime.now().millisecondsSinceEpoch.toString(),
+                      name: _nameController.text,
+                      contacts: _selectedContacts,
+                    );
+                    Navigator.pop(context, group);
+                  }
+                : null,
           ),
         ],
       ),
@@ -471,68 +493,58 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
           ),
           Expanded(
             child: _loading
-              ? Center(child: CupertinoActivityIndicator())
-              : _errorMessage.isNotEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(CupertinoIcons.exclamationmark_circle, 
-                          size: 64, 
-                          color: Color(0xFFFF3B30)
+                ? Center(child: CupertinoActivityIndicator())
+                : _errorMessage.isNotEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(CupertinoIcons.exclamationmark_circle,
+                                size: 64, color: Color(0xFFFF3B30)),
+                            SizedBox(height: 16),
+                            Text(_errorMessage,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(color: Color(0xFF8E8E93))),
+                            if (_errorMessage.contains('permission'))
+                              Padding(
+                                padding: EdgeInsets.only(top: 16),
+                              ),
+                          ],
                         ),
-                        SizedBox(height: 16),
-                        Text(_errorMessage, 
-                          textAlign: TextAlign.center,
-                          style: TextStyle(color: Color(0xFF8E8E93))
-                        ),
-                        if (_errorMessage.contains('permission'))
-                          Padding(
-                            padding: EdgeInsets.only(top: 16),
-                            child: CupertinoButton(
-                              color: Color(0xFF007AFF),
-                              child: Text('Open Settings'),
-                              onPressed: () => openAppSettings(),
+                      )
+                    : ListView.builder(
+                        itemCount: _allContacts.length,
+                        itemBuilder: (context, index) {
+                          final contact = _allContacts[index];
+                          final isSelected = _selectedContacts
+                              .any((c) => c.identifier == contact.identifier);
+
+                          return ListTile(
+                            title: Text(contact.displayName ?? 'Unknown'),
+                            subtitle: Text(
+                              contact.phones?.isNotEmpty == true
+                                  ? contact.phones!.first.value ?? ''
+                                  : 'No phone number',
+                              style: TextStyle(color: Color(0xFF8E8E93)),
                             ),
-                          ),
-                      ],
-                    ),
-                  )
-                : ListView.builder(
-                    itemCount: _allContacts.length,
-                    itemBuilder: (context, index) {
-                      final contact = _allContacts[index];
-                      final isSelected = _selectedContacts.any((c) => 
-                        c.identifier == contact.identifier
-                      );
-                      
-                      return ListTile(
-                        title: Text(contact.displayName ?? 'Unknown'),
-                        subtitle: Text(
-                          contact.phones?.isNotEmpty == true
-                            ? contact.phones!.first.value ?? ''
-                            : 'No phone number',
-                          style: TextStyle(color: Color(0xFF8E8E93)),
-                        ),
-                        trailing: isSelected
-                          ? Icon(CupertinoIcons.checkmark_circle_fill, 
-                              color: Color(0xFF007AFF))
-                          : Icon(CupertinoIcons.circle, 
-                              color: Color(0xFFD1D1D6)),
-                        onTap: () {
-                          setState(() {
-                            if (isSelected) {
-                              _selectedContacts.removeWhere((c) => 
-                                c.identifier == contact.identifier
-                              );
-                            } else {
-                              _selectedContacts.add(contact);
-                            }
-                          });
+                            trailing: isSelected
+                                ? Icon(CupertinoIcons.checkmark_circle_fill,
+                                    color: Color(0xFF007AFF))
+                                : Icon(CupertinoIcons.circle,
+                                    color: Color(0xFFD1D1D6)),
+                            onTap: () {
+                              setState(() {
+                                if (isSelected) {
+                                  _selectedContacts.removeWhere((c) =>
+                                      c.identifier == contact.identifier);
+                                } else {
+                                  _selectedContacts.add(contact);
+                                }
+                              });
+                            },
+                          );
                         },
-                      );
-                    },
-                  ),
+                      ),
           ),
         ],
       ),
@@ -542,9 +554,9 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
 
 class GroupDetailsScreen extends StatelessWidget {
   final ContactGroup group;
-  
+
   GroupDetailsScreen({required this.group});
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -566,17 +578,18 @@ class GroupDetailsScreen extends StatelessWidget {
               leading: CircleAvatar(
                 backgroundColor: Color(0xFF007AFF),
                 child: Text(
-                  (contact.displayName?.isNotEmpty == true 
-                    ? contact.displayName![0] 
-                    : '?').toUpperCase(),
+                  (contact.displayName?.isNotEmpty == true
+                          ? contact.displayName![0]
+                          : '?')
+                      .toUpperCase(),
                   style: TextStyle(color: Colors.white),
                 ),
               ),
               title: Text(contact.displayName ?? 'Unknown'),
               subtitle: Text(
                 contact.phones?.isNotEmpty == true
-                  ? contact.phones!.first.value ?? 'No number'
-                  : 'No number',
+                    ? contact.phones!.first.value ?? 'No number'
+                    : 'No number',
                 style: TextStyle(color: Color(0xFF8E8E93)),
               ),
             ),
@@ -591,13 +604,12 @@ class TemplatesScreen extends StatefulWidget {
   final List<MessageTemplate> templates;
   final List<ContactGroup> groups;
   final Function(List<MessageTemplate>) onTemplatesChanged;
-  
-  TemplatesScreen({
-    required this.templates, 
-    required this.groups,
-    required this.onTemplatesChanged
-  });
-  
+
+  TemplatesScreen(
+      {required this.templates,
+      required this.groups,
+      required this.onTemplatesChanged});
+
   @override
   _TemplatesScreenState createState() => _TemplatesScreenState();
 }
@@ -607,68 +619,75 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Message Templates', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: Text('Message Templates',
+            style: TextStyle(fontWeight: FontWeight.bold)),
       ),
       body: widget.templates.isEmpty
-        ? Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(CupertinoIcons.doc_text, size: 64, color: Color(0xFFD1D1D6)),
-                SizedBox(height: 16),
-                Text('No templates yet', style: TextStyle(fontSize: 18, color: Color(0xFF8E8E93))),
-                SizedBox(height: 8),
-                Text('Tap + to create a template', style: TextStyle(color: Color(0xFF8E8E93))),
-              ],
-            ),
-          )
-        : ListView.builder(
-            padding: EdgeInsets.all(16),
-            itemCount: widget.templates.length,
-            itemBuilder: (context, index) {
-              final template = widget.templates[index];
-              return Container(
-                margin: EdgeInsets.only(bottom: 12),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.04),
-                      blurRadius: 8,
-                      offset: Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: ListTile(
-                  contentPadding: EdgeInsets.all(16),
-                  title: Text(
-                    template.name,
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-                  ),
-                  subtitle: Text(
-                    template.content,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(color: Color(0xFF8E8E93)),
-                  ),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: Icon(CupertinoIcons.pencil, color: Color(0xFF007AFF)),
-                        onPressed: () => _editTemplate(template),
-                      ),
-                      IconButton(
-                        icon: Icon(CupertinoIcons.trash, color: Color(0xFFFF3B30)),
-                        onPressed: () => _deleteTemplate(template),
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(CupertinoIcons.doc_text,
+                      size: 64, color: Color(0xFFD1D1D6)),
+                  SizedBox(height: 16),
+                  Text('No templates yet',
+                      style: TextStyle(fontSize: 18, color: Color(0xFF8E8E93))),
+                  SizedBox(height: 8),
+                  Text('Tap + to create a template',
+                      style: TextStyle(color: Color(0xFF8E8E93))),
+                ],
+              ),
+            )
+          : ListView.builder(
+              padding: EdgeInsets.all(16),
+              itemCount: widget.templates.length,
+              itemBuilder: (context, index) {
+                final template = widget.templates[index];
+                return Container(
+                  margin: EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.04),
+                        blurRadius: 8,
+                        offset: Offset(0, 2),
                       ),
                     ],
                   ),
-                ),
-              );
-            },
-          ),
+                  child: ListTile(
+                    contentPadding: EdgeInsets.all(16),
+                    title: Text(
+                      template.name,
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                    ),
+                    subtitle: Text(
+                      template.content,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(color: Color(0xFF8E8E93)),
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: Icon(CupertinoIcons.pencil,
+                              color: Color(0xFF007AFF)),
+                          onPressed: () => _editTemplate(template),
+                        ),
+                        IconButton(
+                          icon: Icon(CupertinoIcons.trash,
+                              color: Color(0xFFFF3B30)),
+                          onPressed: () => _deleteTemplate(template),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
       floatingActionButton: FloatingActionButton(
         onPressed: _createTemplate,
         backgroundColor: Color(0xFF007AFF),
@@ -677,7 +696,7 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
       ),
     );
   }
-  
+
   void _createTemplate() async {
     final result = await Navigator.push(
       context,
@@ -690,7 +709,7 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
       });
     }
   }
-  
+
   void _editTemplate(MessageTemplate template) async {
     final result = await Navigator.push(
       context,
@@ -706,7 +725,7 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
       });
     }
   }
-  
+
   void _deleteTemplate(MessageTemplate template) {
     showCupertinoDialog(
       context: context,
@@ -737,9 +756,9 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
 
 class CreateTemplateScreen extends StatefulWidget {
   final MessageTemplate? template;
-  
+
   CreateTemplateScreen({this.template});
-  
+
   @override
   _CreateTemplateScreenState createState() => _CreateTemplateScreenState();
 }
@@ -747,7 +766,7 @@ class CreateTemplateScreen extends StatefulWidget {
 class _CreateTemplateScreenState extends State<CreateTemplateScreen> {
   final _nameController = TextEditingController();
   final _contentController = TextEditingController();
-  
+
   @override
   void initState() {
     super.initState();
@@ -756,7 +775,7 @@ class _CreateTemplateScreenState extends State<CreateTemplateScreen> {
       _contentController.text = widget.template!.content;
     }
   }
-  
+
   void _insertVariable(String variable) {
     final text = _contentController.text;
     final selection = _contentController.selection;
@@ -770,12 +789,13 @@ class _CreateTemplateScreenState extends State<CreateTemplateScreen> {
       TextPosition(offset: selection.start + variable.length),
     );
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.template == null ? 'Create Template' : 'Edit Template'),
+        title:
+            Text(widget.template == null ? 'Create Template' : 'Edit Template'),
         leading: CupertinoButton(
           padding: EdgeInsets.zero,
           child: Text('Cancel'),
@@ -784,16 +804,18 @@ class _CreateTemplateScreenState extends State<CreateTemplateScreen> {
         actions: [
           CupertinoButton(
             child: Text('Save', style: TextStyle(fontWeight: FontWeight.bold)),
-            onPressed: _nameController.text.isEmpty || _contentController.text.isEmpty
-              ? null
-              : () {
-                  final template = MessageTemplate(
-                    id: widget.template?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
-                    name: _nameController.text,
-                    content: _contentController.text,
-                  );
-                  Navigator.pop(context, template);
-                },
+            onPressed:
+                _nameController.text.isEmpty || _contentController.text.isEmpty
+                    ? null
+                    : () {
+                        final template = MessageTemplate(
+                          id: widget.template?.id ??
+                              DateTime.now().millisecondsSinceEpoch.toString(),
+                          name: _nameController.text,
+                          content: _contentController.text,
+                        );
+                        Navigator.pop(context, template);
+                      },
           ),
         ],
       ),
@@ -819,7 +841,8 @@ class _CreateTemplateScreenState extends State<CreateTemplateScreen> {
                   height: 200,
                   child: CupertinoTextField(
                     controller: _contentController,
-                    placeholder: 'Message content...\nUse variables like [First Name] to personalize',
+                    placeholder:
+                        'Message content...\nUse variables like [First Name] to personalize',
                     padding: EdgeInsets.all(12),
                     maxLines: null,
                     decoration: BoxDecoration(
@@ -858,7 +881,7 @@ class _CreateTemplateScreenState extends State<CreateTemplateScreen> {
       ),
     );
   }
-  
+
   Widget _buildVariableChip(String variable) {
     return ActionChip(
       label: Text(variable),
@@ -871,9 +894,9 @@ class _CreateTemplateScreenState extends State<CreateTemplateScreen> {
 class SendScreen extends StatefulWidget {
   final List<ContactGroup> groups;
   final List<MessageTemplate> templates;
-  
+
   SendScreen({required this.groups, required this.templates});
-  
+
   @override
   _SendScreenState createState() => _SendScreenState();
 }
@@ -882,12 +905,13 @@ class _SendScreenState extends State<SendScreen> {
   ContactGroup? _selectedGroup;
   MessageTemplate? _selectedTemplate;
   bool _sending = false;
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Send Messages', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: Text('Send Messages',
+            style: TextStyle(fontWeight: FontWeight.bold)),
       ),
       body: Padding(
         padding: EdgeInsets.all(16),
@@ -910,7 +934,8 @@ class _SendScreenState extends State<SendScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Select Group', style: TextStyle(fontWeight: FontWeight.w600)),
+                  Text('Select Group',
+                      style: TextStyle(fontWeight: FontWeight.w600)),
                   SizedBox(height: 8),
                   Container(
                     padding: EdgeInsets.symmetric(horizontal: 12),
@@ -929,7 +954,8 @@ class _SendScreenState extends State<SendScreen> {
                           child: Text(group.name),
                         );
                       }).toList(),
-                      onChanged: (group) => setState(() => _selectedGroup = group),
+                      onChanged: (group) =>
+                          setState(() => _selectedGroup = group),
                     ),
                   ),
                 ],
@@ -952,7 +978,8 @@ class _SendScreenState extends State<SendScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Select Template', style: TextStyle(fontWeight: FontWeight.w600)),
+                  Text('Select Template',
+                      style: TextStyle(fontWeight: FontWeight.w600)),
                   SizedBox(height: 8),
                   Container(
                     padding: EdgeInsets.symmetric(horizontal: 12),
@@ -971,7 +998,8 @@ class _SendScreenState extends State<SendScreen> {
                           child: Text(template.name),
                         );
                       }).toList(),
-                      onChanged: (template) => setState(() => _selectedTemplate = template),
+                      onChanged: (template) =>
+                          setState(() => _selectedTemplate = template),
                     ),
                   ),
                 ],
@@ -988,7 +1016,8 @@ class _SendScreenState extends State<SendScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Preview', style: TextStyle(fontWeight: FontWeight.w600)),
+                    Text('Preview',
+                        style: TextStyle(fontWeight: FontWeight.w600)),
                     SizedBox(height: 8),
                     Text(
                       _selectedTemplate!.content,
@@ -1000,9 +1029,11 @@ class _SendScreenState extends State<SendScreen> {
             ],
             Spacer(),
             ElevatedButton(
-              onPressed: _selectedGroup == null || _selectedTemplate == null || _sending
-                ? null
-                : _sendMessages,
+              onPressed: _selectedGroup == null ||
+                      _selectedTemplate == null ||
+                      _sending
+                  ? null
+                  : _sendMessages,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Color(0xFF007AFF),
                 padding: EdgeInsets.symmetric(vertical: 16),
@@ -1011,15 +1042,15 @@ class _SendScreenState extends State<SendScreen> {
                 ),
               ),
               child: _sending
-                ? CupertinoActivityIndicator(color: Colors.white)
-                : Text(
-                    'Send Messages',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
+                  ? CupertinoActivityIndicator(color: Colors.white)
+                  : Text(
+                      'Send Messages',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
                     ),
-                  ),
             ),
             SizedBox(height: 20),
           ],
@@ -1027,22 +1058,23 @@ class _SendScreenState extends State<SendScreen> {
       ),
     );
   }
-  
+
   Future<void> _sendMessages() async {
     if (_selectedGroup == null || _selectedTemplate == null) return;
-    
+
     setState(() => _sending = true);
-    
+
     int successCount = 0;
     int failCount = 0;
-    
+
     for (var contact in _selectedGroup!.contacts) {
       try {
-        String message = _personalizeMessage(_selectedTemplate!.content, contact);
-        
+        String message =
+            _personalizeMessage(_selectedTemplate!.content, contact);
+
         // Check if recipient has the app (this is a placeholder - you'd implement actual logic)
         bool hasApp = await _checkIfUserHasApp(contact);
-        
+
         if (hasApp) {
           // Send encrypted message through app
           await _sendEncryptedMessage(contact, message);
@@ -1050,19 +1082,19 @@ class _SendScreenState extends State<SendScreen> {
           // Open native SMS with prepopulated message
           await _sendSMS(contact, message);
         }
-        
+
         successCount++;
       } catch (e) {
         failCount++;
         print('Failed to send to ${contact.displayName}: $e');
       }
-      
+
       // Add small delay between messages to avoid rate limiting
       await Future.delayed(Duration(milliseconds: 500));
     }
-    
+
     setState(() => _sending = false);
-    
+
     showCupertinoDialog(
       context: context,
       builder: (context) => CupertinoAlertDialog(
@@ -1078,15 +1110,15 @@ class _SendScreenState extends State<SendScreen> {
       ),
     );
   }
-  
+
   String _personalizeMessage(String template, Contact contact) {
     String message = template;
-    
+
     // Replace variables with actual contact data
     String firstName = '';
     String lastName = '';
     String fullName = contact.displayName ?? '';
-    
+
     if (fullName.isNotEmpty) {
       List<String> nameParts = fullName.split(' ');
       firstName = nameParts.first;
@@ -1094,46 +1126,49 @@ class _SendScreenState extends State<SendScreen> {
         lastName = nameParts.sublist(1).join(' ');
       }
     }
-    
+
     message = message.replaceAll('[First Name]', firstName);
     message = message.replaceAll('[Last Name]', lastName);
     message = message.replaceAll('[Full Name]', fullName);
-    message = message.replaceAll('[Phone]', 
-      contact.phones?.isNotEmpty == true ? contact.phones!.first.value ?? '' : '');
-    
+    message = message.replaceAll(
+        '[Phone]',
+        contact.phones?.isNotEmpty == true
+            ? contact.phones!.first.value ?? ''
+            : '');
+
     return message;
   }
-  
+
   Future<bool> _checkIfUserHasApp(Contact contact) async {
     // This is a placeholder implementation
     // In a real app, you would check your backend to see if this phone number
     // is registered with your app
-    
+
     // For demo purposes, randomly return true/false
     return Future.value(DateTime.now().millisecondsSinceEpoch % 3 == 0);
   }
-  
+
   Future<void> _sendEncryptedMessage(Contact contact, String message) async {
     // This is a placeholder for sending encrypted messages through your app
     // You would implement your actual encrypted messaging logic here
-    
+
     // For demo purposes, just simulate sending
     await Future.delayed(Duration(seconds: 1));
     print('Sent encrypted message to ${contact.displayName}: $message');
   }
-  
+
   Future<void> _sendSMS(Contact contact, String message) async {
     if (contact.phones?.isNotEmpty != true) {
       throw Exception('No phone number for contact');
     }
-    
+
     final phoneNumber = contact.phones!.first.value!;
     final Uri smsUri = Uri(
       scheme: 'sms',
       path: phoneNumber,
       queryParameters: {'body': message},
     );
-    
+
     if (await canLaunchUrl(smsUri)) {
       await launchUrl(smsUri);
     } else {
