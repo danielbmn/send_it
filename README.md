@@ -1,6 +1,8 @@
 # sendit
 
-A new Flutter project.
+Send SMS messages to groups small or large as though you sent each one an individual text message.  
+Contact variables in templates dynamically insert contact info.
+ex. Hey [First Name], I'm excited to see you at the conference
 
 ## Getting Started
 
