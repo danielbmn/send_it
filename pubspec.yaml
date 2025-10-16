@@ -1,5 +1,5 @@
-name: completesend
-description: A Flutter app for managing contact groups and sending templated messages
+name: sendit
+description: Send it - A Flutter app for managing contact groups and sending templated messages
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -26,11 +26,14 @@ dependencies:
   file_picker: ^6.1.1
   share_plus: ^7.2.1
   path_provider: ^2.1.1
+  flutter_sms: ^2.3.3
+  shared_preferences: ^2.2.3
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^3.0.0
+  flutter_native_splash: ^2.3.10
 
 flutter:
   uses-material-design: true
@@ -39,3 +42,11 @@ flutter:
   # assets:
   #   - images/
   #   - assets/
+
+flutter_native_splash:
+  color: "#FFFF00"
+  image: lib/sendit!.png
+  android_12:
+    image: lib/sendit!.png
+    color: "#FFFF00"
+  ios_content_mode: scaleAspectFit

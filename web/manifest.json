@@ -1,6 +1,6 @@
 {
-    "name": "completesend",
-    "short_name": "completesend",
+    "name": "sendit",
+    "short_name": "sendit",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
