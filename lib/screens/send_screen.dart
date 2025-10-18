@@ -5,12 +5,13 @@ import 'package:flutter_sms/flutter_sms.dart';
 import '../models/contact_group.dart';
 import '../models/message_template.dart';
 import '../services/storage_service.dart';
+import '../utils/logger.dart';
 
 class SendScreen extends StatefulWidget {
   final List<ContactGroup> groups;
   final List<MessageTemplate> templates;
 
-  SendScreen({required this.groups, required this.templates});
+  const SendScreen({super.key, required this.groups, required this.templates});
 
   @override
   _SendScreenState createState() => _SendScreenState();
@@ -44,7 +45,7 @@ class _SendScreenState extends State<SendScreen> with WidgetsBindingObserver {
 
   Future<void> _refreshData() async {
     try {
-      print('🔄 Refreshing send screen data on app resume...');
+      Logger.info('Refreshing send screen data on app resume...');
 
       // Refresh groups and templates from storage
       await StorageService.loadGroups();
@@ -55,9 +56,9 @@ class _SendScreenState extends State<SendScreen> with WidgetsBindingObserver {
         // The parent should have already refreshed, but this ensures consistency
       });
 
-      print('✅ Send screen data refreshed');
+      Logger.success('Send screen data refreshed');
     } catch (e) {
-      print('❌ Error refreshing send screen data: $e');
+      Logger.error('Error refreshing send screen data', e);
     }
   }
 
@@ -65,16 +66,16 @@ class _SendScreenState extends State<SendScreen> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Send Messages',
+        title: const Text('Send Messages',
             style: TextStyle(fontWeight: FontWeight.bold)),
       ),
       body: Padding(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Container(
-              padding: EdgeInsets.all(16),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
@@ -82,27 +83,27 @@ class _SendScreenState extends State<SendScreen> with WidgetsBindingObserver {
                   BoxShadow(
                     color: Colors.black.withOpacity(0.04),
                     blurRadius: 8,
-                    offset: Offset(0, 2),
+                    offset: const Offset(0, 2),
                   ),
                 ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Select Group',
+                  const Text('Select Group',
                       style: TextStyle(fontWeight: FontWeight.w600)),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
                     decoration: BoxDecoration(
-                      color: Color(0xFFF2F2F7),
+                      color: const Color(0xFFF2F2F7),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: DropdownButton<ContactGroup>(
                       value: _selectedGroup,
                       isExpanded: true,
-                      underline: SizedBox(),
-                      hint: Text('Choose a group'),
+                      underline: const SizedBox(),
+                      hint: const Text('Choose a group'),
                       items: widget.groups.map((group) {
                         return DropdownMenuItem(
                           value: group,
@@ -116,9 +117,9 @@ class _SendScreenState extends State<SendScreen> with WidgetsBindingObserver {
                 ],
               ),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             Container(
-              padding: EdgeInsets.all(16),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
@@ -126,27 +127,27 @@ class _SendScreenState extends State<SendScreen> with WidgetsBindingObserver {
                   BoxShadow(
                     color: Colors.black.withOpacity(0.04),
                     blurRadius: 8,
-                    offset: Offset(0, 2),
+                    offset: const Offset(0, 2),
                   ),
                 ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Select Template',
+                  const Text('Select Template',
                       style: TextStyle(fontWeight: FontWeight.w600)),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
                     decoration: BoxDecoration(
-                      color: Color(0xFFF2F2F7),
+                      color: const Color(0xFFF2F2F7),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: DropdownButton<MessageTemplate>(
                       value: _selectedTemplate,
                       isExpanded: true,
-                      underline: SizedBox(),
-                      hint: Text('Choose a template'),
+                      underline: const SizedBox(),
+                      hint: const Text('Choose a template'),
                       items: widget.templates.map((template) {
                         return DropdownMenuItem(
                           value: template,
@@ -161,28 +162,28 @@ class _SendScreenState extends State<SendScreen> with WidgetsBindingObserver {
               ),
             ),
             if (_selectedTemplate != null) ...[
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               Container(
-                padding: EdgeInsets.all(16),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Color(0xFFF2F2F7),
+                  color: const Color(0xFFF2F2F7),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Preview',
+                    const Text('Preview',
                         style: TextStyle(fontWeight: FontWeight.w600)),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     Text(
                       _selectedTemplate!.content,
-                      style: TextStyle(color: Color(0xFF3C3C43)),
+                      style: const TextStyle(color: Color(0xFF3C3C43)),
                     ),
                   ],
                 ),
               ),
             ],
-            Spacer(),
+            const Spacer(),
             ElevatedButton(
               onPressed: _selectedGroup == null ||
                       _selectedTemplate == null ||
@@ -190,15 +191,15 @@ class _SendScreenState extends State<SendScreen> with WidgetsBindingObserver {
                   ? null
                   : _sendMessages,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFF007AFF),
-                padding: EdgeInsets.symmetric(vertical: 16),
+                backgroundColor: const Color(0xFF007AFF),
+                padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
               child: _sending
-                  ? CupertinoActivityIndicator(color: Colors.white)
-                  : Text(
+                  ? const CupertinoActivityIndicator(color: Colors.white)
+                  : const Text(
                       'Send Messages',
                       style: TextStyle(
                         fontSize: 18,
@@ -207,7 +208,7 @@ class _SendScreenState extends State<SendScreen> with WidgetsBindingObserver {
                       ),
                     ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
           ],
         ),
       ),
@@ -229,12 +230,12 @@ class _SendScreenState extends State<SendScreen> with WidgetsBindingObserver {
 
         // Validate message is not empty
         if (message.trim().isEmpty) {
-          print('❌ Empty message for ${contact.displayName}, skipping');
+          Logger.warning('Empty message for ${contact.displayName}, skipping');
           failCount++;
           continue;
         }
 
-        print('📝 Sending message to ${contact.displayName}: $message');
+        Logger.info('Sending message to ${contact.displayName}: $message');
 
         // Check if recipient has the app (this is a placeholder - you'd implement actual logic)
         bool hasApp = await _checkIfUserHasApp(contact);
@@ -250,29 +251,31 @@ class _SendScreenState extends State<SendScreen> with WidgetsBindingObserver {
         successCount++;
       } catch (e) {
         failCount++;
-        print('❌ Failed to send to ${contact.displayName}: $e');
+        Logger.error('Failed to send to ${contact.displayName}', e);
       }
 
       // Add small delay between messages to avoid rate limiting
-      await Future.delayed(Duration(milliseconds: 500));
+      await Future.delayed(const Duration(milliseconds: 500));
     }
 
     setState(() => _sending = false);
 
-    showCupertinoDialog(
-      context: context,
-      builder: (context) => CupertinoAlertDialog(
-        title: Text('Messages Sent'),
-        content: Text('Successfully sent to $successCount contacts'
-            '${failCount > 0 ? '\nFailed: $failCount' : ''}'),
-        actions: [
-          CupertinoDialogAction(
-            child: Text('OK'),
-            onPressed: () => Navigator.pop(context),
-          ),
-        ],
-      ),
-    );
+    if (mounted) {
+      showCupertinoDialog(
+        context: context,
+        builder: (context) => CupertinoAlertDialog(
+          title: const Text('Messages Sent'),
+          content: Text('Successfully sent to $successCount contacts'
+              '${failCount > 0 ? '\nFailed: $failCount' : ''}'),
+          actions: [
+            CupertinoDialogAction(
+              child: const Text('OK'),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ],
+        ),
+      );
+    }
   }
 
   String _personalizeMessage(String template, Contact contact) {
@@ -301,7 +304,7 @@ class _SendScreenState extends State<SendScreen> with WidgetsBindingObserver {
     message = message.replaceAll('[Full Name]', fullName);
     message = message.replaceAll('[Phone]', phoneNumber);
 
-    print('📝 Personalized message for ${contact.displayName}: $message');
+    Logger.info('Personalized message for ${contact.displayName}: $message');
     return message;
   }
 
@@ -319,8 +322,8 @@ class _SendScreenState extends State<SendScreen> with WidgetsBindingObserver {
     // You would implement your actual encrypted messaging logic here
 
     // For demo purposes, just simulate sending
-    await Future.delayed(Duration(seconds: 1));
-    print('Sent encrypted message to ${contact.displayName}: $message');
+    await Future.delayed(const Duration(seconds: 1));
+    Logger.info('Sent encrypted message to ${contact.displayName}: $message');
   }
 
   Future<void> _sendSMS(Contact contact, String message) async {
@@ -333,7 +336,7 @@ class _SendScreenState extends State<SendScreen> with WidgetsBindingObserver {
     // Clean the phone number - remove any formatting
     final cleanPhoneNumber = phoneNumber.replaceAll(RegExp(r'[^\d+]'), '');
 
-    print('📱 Sending SMS to $cleanPhoneNumber: $message');
+    Logger.info('Sending SMS to $cleanPhoneNumber: $message');
 
     try {
       // Use the native SMS composer with pre-filled recipient and message
@@ -343,9 +346,9 @@ class _SendScreenState extends State<SendScreen> with WidgetsBindingObserver {
         sendDirect: false, // This will open the native SMS composer
       );
 
-      print('✅ SMS composer opened successfully: $result');
+      Logger.success('SMS composer opened successfully: $result');
     } catch (e) {
-      print('❌ Error opening SMS composer: $e');
+      Logger.error('Error opening SMS composer', e);
       throw Exception('Could not open SMS composer: $e');
     }
   }

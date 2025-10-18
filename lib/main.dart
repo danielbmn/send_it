@@ -21,24 +21,26 @@ void main() {
     return true; // Mark as handled
   };
 
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'sendit',
       theme: ThemeData(
-        primaryColor: Color(0xFF007AFF),
-        scaffoldBackgroundColor: Color(0xFFF2F2F7),
-        appBarTheme: AppBarTheme(
+        primaryColor: const Color(0xFF007AFF),
+        scaffoldBackgroundColor: const Color(0xFFF2F2F7),
+        appBarTheme: const AppBarTheme(
           backgroundColor: Color(0xFFF9F9F9),
           foregroundColor: Colors.black,
           elevation: 0,
         ),
       ),
-      home: MessagesHomeScreen(),
+      home: const MessagesHomeScreen(),
     );
   }
 }

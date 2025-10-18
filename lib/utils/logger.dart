@@ -19,9 +19,15 @@ class Logger {
     }
   }
 
-  static void error(String message) {
+  static void error(String message, [dynamic error, StackTrace? stackTrace]) {
     if (kDebugMode) {
       print('❌ ERROR: $message');
+      if (error != null) {
+        print('  Error: $error');
+      }
+      if (stackTrace != null) {
+        print('  Stack: $stackTrace');
+      }
     }
   }
 

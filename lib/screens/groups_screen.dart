@@ -9,6 +9,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
 import '../models/contact_group.dart';
 import '../services/storage_service.dart';
+import '../utils/logger.dart';
 import 'create_group_screen.dart';
 import 'group_details_screen.dart';
 
@@ -16,7 +17,8 @@ class GroupsScreen extends StatefulWidget {
   final List<ContactGroup> groups;
   final Function(List<ContactGroup>) onGroupsChanged;
 
-  GroupsScreen({required this.groups, required this.onGroupsChanged});
+  const GroupsScreen(
+      {super.key, required this.groups, required this.onGroupsChanged});
 
   @override
   _GroupsScreenState createState() => _GroupsScreenState();
@@ -47,15 +49,15 @@ class _GroupsScreenState extends State<GroupsScreen>
 
   Future<void> _refreshData() async {
     try {
-      print('🔄 Refreshing groups screen data on app resume...');
+      Logger.info('Refreshing groups screen data on app resume...');
 
       // Trigger parent to refresh groups data
       final freshGroups = await StorageService.loadGroups();
       widget.onGroupsChanged(freshGroups);
 
-      print('✅ Groups screen data refreshed');
+      Logger.success('Groups screen data refreshed');
     } catch (e) {
-      print('❌ Error refreshing groups screen data: $e');
+      Logger.error('Error refreshing groups screen data', e);
     }
   }
 
@@ -63,21 +65,21 @@ class _GroupsScreenState extends State<GroupsScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Contact Groups',
+        title: const Text('Contact Groups',
             style: TextStyle(fontWeight: FontWeight.bold)),
         actions: [
           IconButton(
-            icon: Icon(CupertinoIcons.square_arrow_down),
+            icon: const Icon(CupertinoIcons.square_arrow_down),
             onPressed: _importGroups,
           ),
           IconButton(
-            icon: Icon(CupertinoIcons.square_arrow_up),
+            icon: const Icon(CupertinoIcons.square_arrow_up),
             onPressed: widget.groups.isEmpty ? null : _exportGroups,
           ),
         ],
       ),
       body: widget.groups.isEmpty
-          ? Center(
+          ? const Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -93,12 +95,12 @@ class _GroupsScreenState extends State<GroupsScreen>
               ),
             )
           : ListView.builder(
-              padding: EdgeInsets.all(16),
+              padding: const EdgeInsets.all(16),
               itemCount: widget.groups.length,
               itemBuilder: (context, index) {
                 final group = widget.groups[index];
                 return Container(
-                  margin: EdgeInsets.only(bottom: 12),
+                  margin: const EdgeInsets.only(bottom: 12),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(12),
@@ -106,31 +108,31 @@ class _GroupsScreenState extends State<GroupsScreen>
                       BoxShadow(
                         color: Colors.black.withOpacity(0.04),
                         blurRadius: 8,
-                        offset: Offset(0, 2),
+                        offset: const Offset(0, 2),
                       ),
                     ],
                   ),
                   child: ListTile(
-                    contentPadding: EdgeInsets.all(16),
+                    contentPadding: const EdgeInsets.all(16),
                     title: Text(
                       group.name,
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                      style: const TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.w600),
                     ),
                     subtitle: Text(
                       '${group.contacts.length} contacts',
-                      style: TextStyle(color: Color(0xFF8E8E93)),
+                      style: const TextStyle(color: Color(0xFF8E8E93)),
                     ),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
-                          icon: Icon(CupertinoIcons.pencil,
+                          icon: const Icon(CupertinoIcons.pencil,
                               color: Color(0xFF007AFF)),
                           onPressed: () => _editGroup(group),
                         ),
                         IconButton(
-                          icon: Icon(CupertinoIcons.trash,
+                          icon: const Icon(CupertinoIcons.trash,
                               color: Color(0xFFFF3B30)),
                           onPressed: () => _deleteGroup(group),
                         ),
@@ -143,9 +145,9 @@ class _GroupsScreenState extends State<GroupsScreen>
             ),
       floatingActionButton: FloatingActionButton(
         onPressed: _createGroup,
-        backgroundColor: Color(0xFF007AFF),
+        backgroundColor: const Color(0xFF007AFF),
         heroTag: 'groups_fab',
-        child: Icon(CupertinoIcons.add),
+        child: const Icon(CupertinoIcons.add),
       ),
     );
   }
@@ -154,24 +156,26 @@ class _GroupsScreenState extends State<GroupsScreen>
     // Try to access contacts directly to test if permission is actually working
     try {
       await ContactsService.getContacts(withThumbnails: false);
-      print('✅ Successfully accessed contacts, opening create group screen');
+      Logger.success(
+          'Successfully accessed contacts, opening create group screen');
 
+      if (!mounted) return;
       final result = await Navigator.push(
         context,
-        CupertinoPageRoute(builder: (context) => CreateGroupScreen()),
+        CupertinoPageRoute(builder: (context) => const CreateGroupScreen()),
       );
-      if (result != null) {
+      if (result != null && mounted) {
         setState(() {
           widget.groups.add(result);
           widget.onGroupsChanged(widget.groups);
         });
       }
     } catch (e) {
-      print('❌ Error accessing contacts: $e');
+      Logger.error('Error accessing contacts', e);
 
       // Check if it's a permission issue
       final permissionStatus = await Permission.contacts.status;
-      print('🔐 Contacts permission status: $permissionStatus');
+      Logger.info('Contacts permission status: $permissionStatus');
 
       String errorMessage =
           'Unable to access contacts. Please check app permissions.';
@@ -183,11 +187,13 @@ class _GroupsScreenState extends State<GroupsScreen>
             'Contacts permission was permanently denied. Please enable it in Settings.';
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(errorMessage),
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage),
+          ),
+        );
+      }
     }
   }
 
@@ -209,16 +215,16 @@ class _GroupsScreenState extends State<GroupsScreen>
     showCupertinoDialog(
       context: context,
       builder: (context) => CupertinoAlertDialog(
-        title: Text('Delete Group'),
+        title: const Text('Delete Group'),
         content: Text('Are you sure you want to delete "${group.name}"?'),
         actions: [
           CupertinoDialogAction(
-            child: Text('Cancel'),
+            child: const Text('Cancel'),
             onPressed: () => Navigator.pop(context),
           ),
           CupertinoDialogAction(
             isDestructiveAction: true,
-            child: Text('Delete'),
+            child: const Text('Delete'),
             onPressed: () {
               setState(() {
                 widget.groups.remove(group);
@@ -310,9 +316,11 @@ class _GroupsScreenState extends State<GroupsScreen>
         widget.onGroupsChanged(widget.groups);
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Groups imported successfully')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Groups imported successfully')),
+        );
+      }
     }
   }
 }

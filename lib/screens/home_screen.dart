@@ -3,11 +3,14 @@ import 'package:flutter/cupertino.dart';
 import '../models/contact_group.dart';
 import '../models/message_template.dart';
 import '../services/storage_service.dart';
+import '../utils/logger.dart';
 import 'groups_screen.dart';
 import 'templates_screen.dart';
 import 'send_screen.dart';
 
 class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
@@ -23,7 +26,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _loadData();
-    print('🚀 App started - loading saved data');
+    Logger.info('App started - loading saved data');
   }
 
   @override
@@ -52,10 +55,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         setState(() {
           _groups = validatedGroups;
         });
-        print('🔄 Groups updated after app resume');
+        Logger.info('Groups updated after app resume');
       }
     } catch (e) {
-      print('❌ Error validating groups on resume: $e');
+      Logger.error('Error validating groups on resume', e);
     }
   }
 
@@ -74,9 +77,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         _isLoading = false;
       });
 
-      print('✅ Data loaded and validated successfully');
+      Logger.success('Data loaded and validated successfully');
     } catch (e) {
-      print('❌ Error loading data: $e');
+      Logger.error('Error loading data', e);
       setState(() {
         _isLoading = false;
       });
@@ -94,7 +97,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return Scaffold(
+      return const Scaffold(
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -138,16 +141,16 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             BoxShadow(
               color: Colors.black.withOpacity(0.05),
               blurRadius: 10,
-              offset: Offset(0, -5),
+              offset: const Offset(0, -5),
             ),
           ],
         ),
         child: BottomNavigationBar(
           currentIndex: _selectedIndex,
           onTap: (index) => setState(() => _selectedIndex = index),
-          selectedItemColor: Color(0xFF007AFF),
-          unselectedItemColor: Color(0xFF8E8E93),
-          items: [
+          selectedItemColor: const Color(0xFF007AFF),
+          unselectedItemColor: const Color(0xFF8E8E93),
+          items: const [
             BottomNavigationBarItem(
               icon: Icon(CupertinoIcons.person_3_fill),
               label: 'Groups',
@@ -166,4 +169,3 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     );
   }
 }
-

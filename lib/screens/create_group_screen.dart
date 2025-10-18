@@ -3,11 +3,12 @@ import 'package:flutter/cupertino.dart';
 import 'package:contacts_service/contacts_service.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../models/contact_group.dart';
+import '../utils/logger.dart';
 
 class CreateGroupScreen extends StatefulWidget {
   final ContactGroup? group;
 
-  CreateGroupScreen({this.group});
+  const CreateGroupScreen({super.key, this.group});
 
   @override
   _CreateGroupScreenState createState() => _CreateGroupScreenState();
@@ -51,14 +52,14 @@ class _CreateGroupScreenState extends State<CreateGroupScreen>
 
   Future<void> _refreshContactsPreservingSelections() async {
     try {
-      print('🔄 Refreshing contacts on app resume...');
+      Logger.info('🔄 Refreshing contacts on app resume...');
 
       // Check contacts permission first
       final permissionStatus = await Permission.contacts.status;
-      print('🔐 Contacts permission status: $permissionStatus');
+      Logger.info('🔐 Contacts permission status: $permissionStatus');
 
       if (permissionStatus.isDenied || permissionStatus.isPermanentlyDenied) {
-        print('⚠️ Contacts permission denied, skipping refresh');
+        Logger.info('⚠️ Contacts permission denied, skipping refresh');
         return; // Skip refresh if permission is denied
       }
 
@@ -66,7 +67,8 @@ class _CreateGroupScreenState extends State<CreateGroupScreen>
       final selectedIdentifiers =
           _selectedContacts.map((contact) => contact.identifier).toSet();
 
-      print('📋 Preserving ${selectedIdentifiers.length} contact selections');
+      Logger.info(
+          '📋 Preserving ${selectedIdentifiers.length} contact selections');
 
       // Load fresh contacts from device
       final contacts = await ContactsService.getContacts(withThumbnails: false);
@@ -80,7 +82,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen>
       for (var contact in contactsList) {
         if (selectedIdentifiers.contains(contact.identifier)) {
           newSelectedContacts.add(contact);
-          print('  ✅ Restored contact selection: ${contact.displayName}');
+          Logger.info('  ✅ Restored contact selection: ${contact.displayName}');
         }
       }
 
@@ -89,32 +91,32 @@ class _CreateGroupScreenState extends State<CreateGroupScreen>
         _selectedContacts = newSelectedContacts;
       });
 
-      print(
+      Logger.info(
           '✅ Contacts refreshed: ${contactsList.length} total, ${newSelectedContacts.length} selected');
     } catch (e) {
-      print('❌ Error refreshing contacts: $e');
+      Logger.info('❌ Error refreshing contacts: $e');
     }
   }
 
   Future<void> _loadContacts() async {
     try {
-      print('🔍 Loading contacts...');
+      Logger.info('🔍 Loading contacts...');
 
       // Try to access contacts directly to test if permission is actually working
       try {
         await ContactsService.getContacts(withThumbnails: false);
-        print('✅ Contacts access successful, permission is working');
+        Logger.info('✅ Contacts access successful, permission is working');
       } catch (e) {
-        print('❌ Contacts access failed: $e');
+        Logger.info('❌ Contacts access failed: $e');
 
         // Check permission status and request if needed
         final permissionStatus = await Permission.contacts.status;
-        print('🔐 Contacts permission status: $permissionStatus');
+        Logger.info('🔐 Contacts permission status: $permissionStatus');
 
         if (permissionStatus.isDenied) {
-          print('🔐 Requesting contacts permission...');
+          Logger.info('🔐 Requesting contacts permission...');
           final result = await Permission.contacts.request();
-          print('🔐 Permission request result: $result');
+          Logger.info('🔐 Permission request result: $result');
 
           if (result.isDenied || result.isPermanentlyDenied) {
             setState(() {
@@ -142,7 +144,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen>
       setState(() {
         _allContacts = contactsList;
         _loading = false;
-        print('📱 Loaded ${_allContacts.length} contacts');
+        Logger.info('📱 Loaded ${_allContacts.length} contacts');
         if (_allContacts.isEmpty) {
           _errorMessage = 'No contacts found';
         }
@@ -173,7 +175,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen>
       _selectedContacts = existingContacts;
     });
 
-    print(
+    Logger.info(
         '📱 Selected ${_selectedContacts.length} existing contacts for editing');
   }
 
@@ -184,19 +186,11 @@ class _CreateGroupScreenState extends State<CreateGroupScreen>
         title: Text(widget.group == null ? 'Create Group' : 'Edit Group'),
         leading: CupertinoButton(
           padding: EdgeInsets.zero,
-          child: Text('Cancel'),
+          child: const Text('Cancel'),
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
           CupertinoButton(
-            child: Text('Save',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: (_nameController.text.isNotEmpty &&
-                          _selectedContacts.isNotEmpty)
-                      ? Color(0xFF007AFF)
-                      : Color(0xFF8E8E93),
-                )),
             onPressed: (_nameController.text.isNotEmpty &&
                     _selectedContacts.isNotEmpty)
                 ? () {
@@ -209,6 +203,14 @@ class _CreateGroupScreenState extends State<CreateGroupScreen>
                     Navigator.pop(context, group);
                   }
                 : null,
+            child: Text('Save',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: (_nameController.text.isNotEmpty &&
+                          _selectedContacts.isNotEmpty)
+                      ? const Color(0xFF007AFF)
+                      : const Color(0xFF8E8E93),
+                )),
           ),
         ],
       ),
@@ -216,41 +218,42 @@ class _CreateGroupScreenState extends State<CreateGroupScreen>
         children: [
           Container(
             color: Colors.white,
-            padding: EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16),
             child: CupertinoTextField(
               controller: _nameController,
               placeholder: 'Group Name',
-              padding: EdgeInsets.all(12),
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Color(0xFFF2F2F7),
+                color: const Color(0xFFF2F2F7),
                 borderRadius: BorderRadius.circular(8),
               ),
               onChanged: (_) => setState(() {}),
             ),
           ),
           Padding(
-            padding: EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16),
             child: Text(
               '${_selectedContacts.length} contacts selected',
-              style: TextStyle(color: Color(0xFF8E8E93)),
+              style: const TextStyle(color: Color(0xFF8E8E93)),
             ),
           ),
           Expanded(
             child: _loading
-                ? Center(child: CupertinoActivityIndicator())
+                ? const Center(child: CupertinoActivityIndicator())
                 : _errorMessage.isNotEmpty
                     ? Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(CupertinoIcons.exclamationmark_circle,
+                            const Icon(CupertinoIcons.exclamationmark_circle,
                                 size: 64, color: Color(0xFFFF3B30)),
-                            SizedBox(height: 16),
+                            const SizedBox(height: 16),
                             Text(_errorMessage,
                                 textAlign: TextAlign.center,
-                                style: TextStyle(color: Color(0xFF8E8E93))),
+                                style:
+                                    const TextStyle(color: Color(0xFF8E8E93))),
                             if (_errorMessage.contains('permission'))
-                              Padding(
+                              const Padding(
                                 padding: EdgeInsets.only(top: 16),
                               ),
                           ],
@@ -269,12 +272,13 @@ class _CreateGroupScreenState extends State<CreateGroupScreen>
                               contact.phones?.isNotEmpty == true
                                   ? contact.phones!.first.value ?? ''
                                   : 'No phone number',
-                              style: TextStyle(color: Color(0xFF8E8E93)),
+                              style: const TextStyle(color: Color(0xFF8E8E93)),
                             ),
                             trailing: isSelected
-                                ? Icon(CupertinoIcons.checkmark_circle_fill,
+                                ? const Icon(
+                                    CupertinoIcons.checkmark_circle_fill,
                                     color: Color(0xFF007AFF))
-                                : Icon(CupertinoIcons.circle,
+                                : const Icon(CupertinoIcons.circle,
                                     color: Color(0xFFD1D1D6)),
                             onTap: () {
                               try {
@@ -286,10 +290,10 @@ class _CreateGroupScreenState extends State<CreateGroupScreen>
                                     _selectedContacts.add(contact);
                                   }
                                 });
-                                print(
+                                Logger.info(
                                     '📱 Contact ${contact.displayName} ${isSelected ? 'removed from' : 'added to'} selection');
                               } catch (e) {
-                                print('❌ Error selecting contact: $e');
+                                Logger.info('❌ Error selecting contact: $e');
                               }
                             },
                           );

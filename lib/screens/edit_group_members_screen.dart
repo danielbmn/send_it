@@ -5,13 +5,15 @@ import 'package:permission_handler/permission_handler.dart';
 import '../models/conversation.dart';
 import '../models/contact_info.dart';
 import '../services/storage_service.dart';
+import '../utils/logger.dart';
 import '../widgets/expandable_contact_tile.dart';
 
 class EditGroupMembersScreen extends StatefulWidget {
   final Conversation conversation;
   final Function(List<Contact>) onMembersUpdated;
 
-  EditGroupMembersScreen({
+  const EditGroupMembersScreen({
+    super.key,
     required this.conversation,
     required this.onMembersUpdated,
   });
@@ -47,14 +49,14 @@ class _EditGroupMembersScreenState extends State<EditGroupMembersScreen>
 
   Future<void> _refreshContactsPreservingSelections() async {
     try {
-      print('🔄 Refreshing contacts on app resume...');
+      Logger.info('Refreshing contacts on app resume...');
 
       // Check contacts permission first
       final permissionStatus = await Permission.contacts.status;
-      print('🔐 Contacts permission status: $permissionStatus');
+      Logger.info('Contacts permission status: $permissionStatus');
 
       if (permissionStatus.isDenied || permissionStatus.isPermanentlyDenied) {
-        print('⚠️ Contacts permission denied, skipping refresh');
+        Logger.warning('Contacts permission denied, skipping refresh');
         return; // Skip refresh if permission is denied
       }
 
@@ -68,8 +70,8 @@ class _EditGroupMembersScreenState extends State<EditGroupMembersScreen>
           .map((info) => info.value.toLowerCase())
           .toSet();
 
-      print(
-          '📋 Preserving ${selectedPhoneNumbers.length} phone + ${selectedEmails.length} email selections');
+      Logger.info(
+          'Preserving ${selectedPhoneNumbers.length} phone + ${selectedEmails.length} email selections');
 
       // Load fresh contacts from device
       final contacts = await ContactsService.getContacts(withThumbnails: false);
@@ -96,8 +98,8 @@ class _EditGroupMembersScreenState extends State<EditGroupMembersScreen>
                     type: ContactInfoType.phone,
                     label: phone.label,
                   ));
-                  print(
-                      '  ✅ Restored phone selection: ${contact.displayName} - $normalizedPhone');
+                  Logger.success(
+                      'Restored phone selection: ${contact.displayName} - $normalizedPhone');
                 }
               }
             }
@@ -115,8 +117,8 @@ class _EditGroupMembersScreenState extends State<EditGroupMembersScreen>
                   type: ContactInfoType.email,
                   label: email.label,
                 ));
-                print(
-                    '  ✅ Restored email selection: ${contact.displayName} - ${email.value}');
+                Logger.success(
+                    'Restored email selection: ${contact.displayName} - ${email.value}');
               }
             }
           }
@@ -128,10 +130,10 @@ class _EditGroupMembersScreenState extends State<EditGroupMembersScreen>
         _selectedContactInfos = newSelectedInfos;
       });
 
-      print(
-          '✅ Contacts refreshed: ${contactsList.length} total, ${newSelectedInfos.length} selected');
+      Logger.success(
+          'Contacts refreshed: ${contactsList.length} total, ${newSelectedInfos.length} selected');
     } catch (e) {
-      print('❌ Error refreshing contacts: $e');
+      Logger.error('Error refreshing contacts', e);
     }
   }
 
@@ -245,15 +247,15 @@ class _EditGroupMembersScreenState extends State<EditGroupMembersScreen>
 
   Future<void> _loadContacts() async {
     try {
-      print('🔍 Loading contacts for group editing...');
+      Logger.info('Loading contacts for group editing...');
       // Get fresh contacts data
       final contacts = await ContactsService.getContacts(withThumbnails: false);
-      print('📱 Raw contacts loaded: ${contacts.length}');
+      Logger.info('Raw contacts loaded: ${contacts.length}');
 
       // Debug: Print all contact names
       for (final contact in contacts) {
-        print(
-            '📱 Contact: ${contact.displayName} - ${contact.phones?.length ?? 0} phones');
+        Logger.info(
+            'Contact: ${contact.displayName} - ${contact.phones?.length ?? 0} phones');
       }
 
       final contactsList = contacts.where((contact) {
@@ -263,7 +265,7 @@ class _EditGroupMembersScreenState extends State<EditGroupMembersScreen>
       setState(() {
         _allContacts = contactsList;
         _loading = false;
-        print('📱 Loaded ${_allContacts.length} contacts');
+        Logger.info('Loaded ${_allContacts.length} contacts');
         if (_allContacts.isEmpty) {
           _errorMessage = 'No contacts found';
         }
@@ -280,35 +282,35 @@ class _EditGroupMembersScreenState extends State<EditGroupMembersScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Edit Group Members'),
-        backgroundColor: Color(0xFFF9F9F9),
+        title: const Text('Edit Group Members'),
+        backgroundColor: const Color(0xFFF9F9F9),
         elevation: 0,
         leading: CupertinoButton(
-          child: Icon(CupertinoIcons.xmark, color: Color(0xFF007AFF)),
+          child: const Icon(CupertinoIcons.xmark, color: Color(0xFF007AFF)),
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
           CupertinoButton(
-            child: Text('Save',
+            onPressed: _saveChanges,
+            child: const Text('Save',
                 style: TextStyle(
                     color: Color(0xFF007AFF), fontWeight: FontWeight.bold)),
-            onPressed: _saveChanges,
           ),
         ],
       ),
       body: _loading
-          ? Center(child: CupertinoActivityIndicator())
+          ? const Center(child: CupertinoActivityIndicator())
           : _errorMessage.isNotEmpty
               ? Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(CupertinoIcons.exclamationmark_circle,
+                      const Icon(CupertinoIcons.exclamationmark_circle,
                           size: 64, color: Color(0xFFFF3B30)),
-                      SizedBox(height: 16),
+                      const SizedBox(height: 16),
                       Text(_errorMessage,
                           textAlign: TextAlign.center,
-                          style: TextStyle(color: Color(0xFF8E8E93))),
+                          style: const TextStyle(color: Color(0xFF8E8E93))),
                     ],
                   ),
                 )
@@ -317,26 +319,26 @@ class _EditGroupMembersScreenState extends State<EditGroupMembersScreen>
                     if (_selectedContactInfos.isNotEmpty)
                       Container(
                         height: 60,
-                        padding: EdgeInsets.symmetric(horizontal: 16),
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
                         child: ListView.builder(
                           scrollDirection: Axis.horizontal,
                           itemCount: _selectedContactInfos.length,
                           itemBuilder: (context, index) {
                             final info = _selectedContactInfos.elementAt(index);
                             return Container(
-                              margin: EdgeInsets.only(right: 8),
+                              margin: const EdgeInsets.only(right: 8),
                               child: Chip(
                                 avatar: Icon(
                                   info.type == ContactInfoType.phone
                                       ? CupertinoIcons.phone_fill
                                       : CupertinoIcons.mail_solid,
                                   size: 16,
-                                  color: Color(0xFF007AFF),
+                                  color: const Color(0xFF007AFF),
                                 ),
                                 label: Text(
                                     '${info.contact.displayName}: ${info.displayValue}',
-                                    style: TextStyle(fontSize: 12)),
-                                deleteIcon: Icon(
+                                    style: const TextStyle(fontSize: 12)),
+                                deleteIcon: const Icon(
                                     CupertinoIcons.xmark_circle_fill,
                                     size: 16),
                                 onDeleted: () {
@@ -351,8 +353,8 @@ class _EditGroupMembersScreenState extends State<EditGroupMembersScreen>
                       ),
                     // Search bar
                     Container(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
                       child: CupertinoSearchTextField(
                         controller: _searchController,
                         placeholder: 'Search contacts',
@@ -371,7 +373,7 @@ class _EditGroupMembersScreenState extends State<EditGroupMembersScreen>
                     ),
                     Expanded(
                       child: _filteredContacts.isEmpty
-                          ? Center(
+                          ? const Center(
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
@@ -387,7 +389,7 @@ class _EditGroupMembersScreenState extends State<EditGroupMembersScreen>
                               ),
                             )
                           : ListView.builder(
-                              padding: EdgeInsets.only(bottom: 100),
+                              padding: const EdgeInsets.only(bottom: 100),
                               itemCount: _filteredContacts.length,
                               itemBuilder: (context, index) {
                                 final contact = _filteredContacts[index];

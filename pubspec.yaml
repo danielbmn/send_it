@@ -20,14 +20,18 @@ dependencies:
   
   # External Communication
   url_launcher: ^6.2.1
+  flutter_email_sender: ^6.0.3
+  flutter_mailer: ^3.0.1
   
   # File Handling
   csv: ^6.0.0
   file_picker: ^6.1.1
   share_plus: ^7.2.1
   path_provider: ^2.1.1
+  xml: ^6.5.0
   flutter_sms: ^2.3.3
   shared_preferences: ^2.2.3
+  uuid: ^4.4.0
 
 dev_dependencies:
   flutter_test:
@@ -44,9 +48,9 @@ flutter:
   #   - assets/
 
 flutter_native_splash:
-  color: "#FFFF00"
-  image: lib/sendit!.png
+  color: "#fff941"
+  image: lib/sendit!-nobackground.png
   android_12:
-    image: lib/sendit!.png
-    color: "#FFFF00"
+    image: lib/sendit!-nobackground.png
+    color: "#fff941"
   ios_content_mode: scaleAspectFit

@@ -13,12 +13,12 @@ class ExpandableContactTile extends StatelessWidget {
   final bool showCheckboxes;
 
   const ExpandableContactTile({
-    Key? key,
+    super.key,
     required this.contact,
     required this.selectedContactInfos,
     required this.onContactInfoToggle,
     this.showCheckboxes = true,
-  }) : super(key: key);
+  });
 
   List<ContactInfo> _getContactInfoList() {
     final List<ContactInfo> infos = [];
@@ -94,18 +94,18 @@ class ExpandableContactTile extends StatelessWidget {
         ListTile(
           dense: true,
           visualDensity: VisualDensity.compact,
-          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
           leading: Stack(
             children: [
               CircleAvatar(
                 radius: 18,
-                backgroundColor: Color(0xFF007AFF),
+                backgroundColor: const Color(0xFF007AFF),
                 child: Text(
                   (contact.displayName?.isNotEmpty == true
                           ? contact.displayName![0]
                           : '?')
                       .toUpperCase(),
-                  style: TextStyle(
+                  style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
                       fontSize: 16),
@@ -119,11 +119,11 @@ class ExpandableContactTile extends StatelessWidget {
                     width: 14,
                     height: 14,
                     decoration: BoxDecoration(
-                      color: Color(0xFF007AFF),
+                      color: const Color(0xFF007AFF),
                       shape: BoxShape.circle,
                       border: Border.all(color: Colors.white, width: 2),
                     ),
-                    child: Icon(
+                    child: const Icon(
                       CupertinoIcons.checkmark,
                       color: Colors.white,
                       size: 8,
@@ -136,7 +136,7 @@ class ExpandableContactTile extends StatelessWidget {
             children: [
               Text(
                 contact.displayName ?? 'Unknown',
-                style: TextStyle(fontSize: 15),
+                style: const TextStyle(fontSize: 15),
               ),
               // COMMENTED OUT FOR RELEASE - NO BACKEND SERVER
               // if (!isOnServer && hasContactInfos) ...[
@@ -153,7 +153,7 @@ class ExpandableContactTile extends StatelessWidget {
             ],
           ),
           subtitle: !hasContactInfos
-              ? Text(
+              ? const Text(
                   'No phone or email',
                   style: TextStyle(
                     color: Color(0xFFFF9500),
@@ -168,21 +168,21 @@ class ExpandableContactTile extends StatelessWidget {
           ...contactInfos.map((info) {
             final isSelected = selectedContactInfos.contains(info);
             return Container(
-              color: Color(0xFFF9F9F9),
+              color: const Color(0xFFF9F9F9),
               child: ListTile(
                 dense: true,
-                visualDensity: VisualDensity(horizontal: 0, vertical: -4),
+                visualDensity: const VisualDensity(horizontal: 0, vertical: -4),
                 contentPadding:
-                    EdgeInsets.only(left: 72, right: 16, top: 0, bottom: 0),
+                    const EdgeInsets.only(left: 72, right: 16, top: 0, bottom: 0),
                 minVerticalPadding: 0,
                 leading: Icon(
                   info.labelIcon,
-                  color: Color(0xFF8E8E93),
+                  color: const Color(0xFF8E8E93),
                   size: 16,
                 ),
                 title: Text(
                   info.displayValue,
-                  style: TextStyle(fontSize: 14),
+                  style: const TextStyle(fontSize: 14),
                 ),
                 trailing: showCheckboxes
                     ? Icon(
@@ -190,7 +190,7 @@ class ExpandableContactTile extends StatelessWidget {
                             ? CupertinoIcons.checkmark_circle_fill
                             : CupertinoIcons.circle,
                         color:
-                            isSelected ? Color(0xFF007AFF) : Color(0xFFD1D1D6),
+                            isSelected ? const Color(0xFF007AFF) : const Color(0xFFD1D1D6),
                         size: 20,
                       )
                     : null,
@@ -201,7 +201,7 @@ class ExpandableContactTile extends StatelessWidget {
                     : null,
               ),
             );
-          }).toList(),
+          }),
       ],
     );
   }

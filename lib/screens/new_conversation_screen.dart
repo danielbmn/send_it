@@ -9,6 +9,7 @@ import '../models/message_template.dart';
 import '../utils/helpers.dart';
 import '../widgets/expandable_contact_tile.dart';
 import '../services/storage_service.dart';
+import '../utils/logger.dart';
 import 'conversation_screen.dart';
 
 class NewConversationScreen extends StatefulWidget {
@@ -16,7 +17,8 @@ class NewConversationScreen extends StatefulWidget {
   final List<Conversation> existingConversations;
   final List<MessageTemplate> templates;
 
-  NewConversationScreen({
+  const NewConversationScreen({
+    super.key,
     required this.onConversationCreated,
     required this.existingConversations,
     required this.templates,
@@ -136,14 +138,14 @@ class _NewConversationScreenState extends State<NewConversationScreen>
 
   Future<void> _refreshContactsPreservingSelections() async {
     try {
-      print('🔄 Refreshing contacts on app resume...');
+      Logger.info('🔄 Refreshing contacts on app resume...');
 
       // Check contacts permission first
       final permissionStatus = await Permission.contacts.status;
-      print('🔐 Contacts permission status: $permissionStatus');
+      Logger.info('🔐 Contacts permission status: $permissionStatus');
 
       if (permissionStatus.isDenied || permissionStatus.isPermanentlyDenied) {
-        print('⚠️ Contacts permission denied, skipping refresh');
+        Logger.info('⚠️ Contacts permission denied, skipping refresh');
         return; // Skip refresh if permission is denied
       }
 
@@ -157,7 +159,7 @@ class _NewConversationScreenState extends State<NewConversationScreen>
           .map((info) => info.value.toLowerCase())
           .toSet();
 
-      print(
+      Logger.info(
           '📋 Preserving ${selectedPhoneNumbers.length} phone + ${selectedEmails.length} email selections');
 
       // Load fresh contacts from device
@@ -185,7 +187,7 @@ class _NewConversationScreenState extends State<NewConversationScreen>
                     type: ContactInfoType.phone,
                     label: phone.label,
                   ));
-                  print(
+                  Logger.info(
                       '  ✅ Restored phone selection: ${contact.displayName} - $normalizedPhone');
                 }
               }
@@ -204,7 +206,7 @@ class _NewConversationScreenState extends State<NewConversationScreen>
                   type: ContactInfoType.email,
                   label: email.label,
                 ));
-                print(
+                Logger.info(
                     '  ✅ Restored email selection: ${contact.displayName} - ${email.value}');
               }
             }
@@ -217,32 +219,32 @@ class _NewConversationScreenState extends State<NewConversationScreen>
         _selectedContactInfos = newSelectedInfos;
       });
 
-      print(
+      Logger.info(
           '✅ Contacts refreshed: ${contactsList.length} total, ${newSelectedInfos.length} selected');
     } catch (e) {
-      print('❌ Error refreshing contacts: $e');
+      Logger.info('❌ Error refreshing contacts: $e');
     }
   }
 
   Future<void> _loadContacts() async {
     try {
-      print('🔍 Loading contacts for new conversation...');
+      Logger.info('🔍 Loading contacts for new conversation...');
 
       // Try to access contacts directly to test if permission is actually working
       try {
         await ContactsService.getContacts(withThumbnails: false);
-        print('✅ Contacts access successful, permission is working');
+        Logger.info('✅ Contacts access successful, permission is working');
       } catch (e) {
-        print('❌ Contacts access failed: $e');
+        Logger.info('❌ Contacts access failed: $e');
 
         // Check permission status and request if needed
         final permissionStatus = await Permission.contacts.status;
-        print('🔐 Contacts permission status: $permissionStatus');
+        Logger.info('🔐 Contacts permission status: $permissionStatus');
 
         if (permissionStatus.isDenied) {
-          print('🔐 Requesting contacts permission...');
+          Logger.info('🔐 Requesting contacts permission...');
           final result = await Permission.contacts.request();
-          print('🔐 Permission request result: $result');
+          Logger.info('🔐 Permission request result: $result');
 
           if (result.isDenied || result.isPermanentlyDenied) {
             setState(() {
@@ -264,11 +266,11 @@ class _NewConversationScreenState extends State<NewConversationScreen>
 
       // Get fresh contacts data
       final contacts = await ContactsService.getContacts(withThumbnails: false);
-      print('📱 Raw contacts loaded: ${contacts.length}');
+      Logger.info('📱 Raw contacts loaded: ${contacts.length}');
 
       // Debug: Print all contact names
       for (final contact in contacts) {
-        print(
+        Logger.info(
             '📱 Contact: ${contact.displayName} - ${contact.phones?.length ?? 0} phones');
       }
 
@@ -279,7 +281,7 @@ class _NewConversationScreenState extends State<NewConversationScreen>
       setState(() {
         _allContacts = contactsList;
         _loading = false;
-        print('📱 Loaded ${_allContacts.length} contacts');
+        Logger.info('📱 Loaded ${_allContacts.length} contacts');
         if (_allContacts.isEmpty) {
           _errorMessage = 'No contacts found';
         }
@@ -296,36 +298,36 @@ class _NewConversationScreenState extends State<NewConversationScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('New Message'),
-        backgroundColor: Color(0xFFF9F9F9),
+        title: const Text('New Message'),
+        backgroundColor: const Color(0xFFF9F9F9),
         elevation: 0,
         leading: CupertinoButton(
-          child: Icon(CupertinoIcons.xmark, color: Color(0xFF007AFF)),
+          child: const Icon(CupertinoIcons.xmark, color: Color(0xFF007AFF)),
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
           if (_selectedContactInfos.isNotEmpty)
             CupertinoButton(
-              child: Text('Next',
+              onPressed: _createConversation,
+              child: const Text('Next',
                   style: TextStyle(
                       color: Color(0xFF007AFF), fontWeight: FontWeight.bold)),
-              onPressed: _createConversation,
             ),
         ],
       ),
       body: _loading
-          ? Center(child: CupertinoActivityIndicator())
+          ? const Center(child: CupertinoActivityIndicator())
           : _errorMessage.isNotEmpty
               ? Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(CupertinoIcons.exclamationmark_circle,
+                      const Icon(CupertinoIcons.exclamationmark_circle,
                           size: 64, color: Color(0xFFFF3B30)),
-                      SizedBox(height: 16),
+                      const SizedBox(height: 16),
                       Text(_errorMessage,
                           textAlign: TextAlign.center,
-                          style: TextStyle(color: Color(0xFF8E8E93))),
+                          style: const TextStyle(color: Color(0xFF8E8E93))),
                     ],
                   ),
                 )
@@ -334,26 +336,26 @@ class _NewConversationScreenState extends State<NewConversationScreen>
                     if (_selectedContactInfos.isNotEmpty)
                       Container(
                         height: 60,
-                        padding: EdgeInsets.symmetric(horizontal: 16),
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
                         child: ListView.builder(
                           scrollDirection: Axis.horizontal,
                           itemCount: _selectedContactInfos.length,
                           itemBuilder: (context, index) {
                             final info = _selectedContactInfos.elementAt(index);
                             return Container(
-                              margin: EdgeInsets.only(right: 8),
+                              margin: const EdgeInsets.only(right: 8),
                               child: Chip(
                                 avatar: Icon(
                                   info.type == ContactInfoType.phone
                                       ? CupertinoIcons.phone_fill
                                       : CupertinoIcons.mail_solid,
                                   size: 16,
-                                  color: Color(0xFF007AFF),
+                                  color: const Color(0xFF007AFF),
                                 ),
                                 label: Text(
                                     '${info.contact.displayName}: ${info.displayValue}',
-                                    style: TextStyle(fontSize: 12)),
-                                deleteIcon: Icon(
+                                    style: const TextStyle(fontSize: 12)),
+                                deleteIcon: const Icon(
                                     CupertinoIcons.xmark_circle_fill,
                                     size: 16),
                                 onDeleted: () {
@@ -368,8 +370,8 @@ class _NewConversationScreenState extends State<NewConversationScreen>
                       ),
                     // Search bar
                     Container(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
                       child: CupertinoSearchTextField(
                         controller: _searchController,
                         placeholder: 'Search contacts',
@@ -388,7 +390,7 @@ class _NewConversationScreenState extends State<NewConversationScreen>
                     ),
                     Expanded(
                       child: _filteredContacts.isEmpty
-                          ? Center(
+                          ? const Center(
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
@@ -404,7 +406,7 @@ class _NewConversationScreenState extends State<NewConversationScreen>
                               ),
                             )
                           : ListView.builder(
-                              padding: EdgeInsets.only(bottom: 100),
+                              padding: const EdgeInsets.only(bottom: 100),
                               itemCount: _filteredContacts.length,
                               itemBuilder: (context, index) {
                                 final contact = _filteredContacts[index];
@@ -471,7 +473,7 @@ class _NewConversationScreenState extends State<NewConversationScreen>
       matchingConversations.sort((a, b) =>
           b.lastMessageTime.compareTo(a.lastMessageTime)); // Newest first
       final newest = matchingConversations.first;
-      print(
+      Logger.info(
           '✅ Found ${matchingConversations.length} matching conversation(s), using newest: ${newest.name ?? "Unnamed"}');
       return newest;
     }
@@ -505,18 +507,18 @@ class _NewConversationScreenState extends State<NewConversationScreen>
     showCupertinoDialog(
       context: context,
       builder: (context) => CupertinoAlertDialog(
-        title: Text('Name Group'),
+        title: const Text('Name Group'),
         content: Column(
           children: [
-            Text('Give this group a name (optional)'),
-            SizedBox(height: 16),
+            const Text('Give this group a name (optional)'),
+            const SizedBox(height: 16),
             CupertinoTextField(
               controller: nameController,
               placeholder: 'Group name',
               autofocus: true,
               maxLength: 50,
               decoration: BoxDecoration(
-                border: Border.all(color: Color(0xFFD1D1D6)),
+                border: Border.all(color: const Color(0xFFD1D1D6)),
                 borderRadius: BorderRadius.circular(8),
               ),
             ),
@@ -524,14 +526,14 @@ class _NewConversationScreenState extends State<NewConversationScreen>
         ),
         actions: [
           CupertinoDialogAction(
-            child: Text('Skip'),
+            child: const Text('Skip'),
             onPressed: () {
               Navigator.pop(context);
               _createConversationWithName(null);
             },
           ),
           CupertinoDialogAction(
-            child: Text('Create'),
+            child: const Text('Create'),
             onPressed: () {
               Navigator.pop(context);
               _createConversationWithName(nameController.text.trim().isEmpty
@@ -575,9 +577,9 @@ class _NewConversationScreenState extends State<NewConversationScreen>
       );
       groups.add(group);
       await StorageService.saveGroups(groups);
-      print('💾 Saved new conversation as group');
+      Logger.info('💾 Saved new conversation as group');
     } catch (e) {
-      print('❌ Error saving conversation: $e');
+      Logger.info('❌ Error saving conversation: $e');
     }
   }
 }

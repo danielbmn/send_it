@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import '../models/message_template.dart';
 import '../models/contact_group.dart';
 import '../services/storage_service.dart';
+import '../utils/logger.dart';
 import 'create_template_screen.dart';
 
 class TemplatesScreen extends StatefulWidget {
@@ -10,8 +11,9 @@ class TemplatesScreen extends StatefulWidget {
   final List<ContactGroup> groups;
   final Function(List<MessageTemplate>) onTemplatesChanged;
 
-  TemplatesScreen(
-      {required this.templates,
+  const TemplatesScreen(
+      {super.key,
+      required this.templates,
       required this.groups,
       required this.onTemplatesChanged});
 
@@ -44,15 +46,15 @@ class _TemplatesScreenState extends State<TemplatesScreen>
 
   Future<void> _refreshData() async {
     try {
-      print('🔄 Refreshing templates screen data on app resume...');
+      Logger.info('Refreshing templates screen data on app resume...');
 
       // Trigger parent to refresh templates data
       final freshTemplates = await StorageService.loadTemplates();
       widget.onTemplatesChanged(freshTemplates);
 
-      print('✅ Templates screen data refreshed');
+      Logger.success('Templates screen data refreshed');
     } catch (e) {
-      print('❌ Error refreshing templates screen data: $e');
+      Logger.error('Error refreshing templates screen data', e);
     }
   }
 
@@ -60,11 +62,11 @@ class _TemplatesScreenState extends State<TemplatesScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Message Templates',
+        title: const Text('Message Templates',
             style: TextStyle(fontWeight: FontWeight.bold)),
       ),
       body: widget.templates.isEmpty
-          ? Center(
+          ? const Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -80,12 +82,12 @@ class _TemplatesScreenState extends State<TemplatesScreen>
               ),
             )
           : ListView.builder(
-              padding: EdgeInsets.all(16),
+              padding: const EdgeInsets.all(16),
               itemCount: widget.templates.length,
               itemBuilder: (context, index) {
                 final template = widget.templates[index];
                 return Container(
-                  margin: EdgeInsets.only(bottom: 12),
+                  margin: const EdgeInsets.only(bottom: 12),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(12),
@@ -93,33 +95,33 @@ class _TemplatesScreenState extends State<TemplatesScreen>
                       BoxShadow(
                         color: Colors.black.withOpacity(0.04),
                         blurRadius: 8,
-                        offset: Offset(0, 2),
+                        offset: const Offset(0, 2),
                       ),
                     ],
                   ),
                   child: ListTile(
-                    contentPadding: EdgeInsets.all(16),
+                    contentPadding: const EdgeInsets.all(16),
                     title: Text(
                       template.name,
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                      style: const TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.w600),
                     ),
                     subtitle: Text(
                       template.content,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(color: Color(0xFF8E8E93)),
+                      style: const TextStyle(color: Color(0xFF8E8E93)),
                     ),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
-                          icon: Icon(CupertinoIcons.pencil,
+                          icon: const Icon(CupertinoIcons.pencil,
                               color: Color(0xFF007AFF)),
                           onPressed: () => _editTemplate(template),
                         ),
                         IconButton(
-                          icon: Icon(CupertinoIcons.trash,
+                          icon: const Icon(CupertinoIcons.trash,
                               color: Color(0xFFFF3B30)),
                           onPressed: () => _deleteTemplate(template),
                         ),
@@ -131,9 +133,9 @@ class _TemplatesScreenState extends State<TemplatesScreen>
             ),
       floatingActionButton: FloatingActionButton(
         onPressed: _createTemplate,
-        backgroundColor: Color(0xFF007AFF),
+        backgroundColor: const Color(0xFF007AFF),
         heroTag: 'templates_fab',
-        child: Icon(CupertinoIcons.add),
+        child: const Icon(CupertinoIcons.add),
       ),
     );
   }
@@ -141,7 +143,7 @@ class _TemplatesScreenState extends State<TemplatesScreen>
   void _createTemplate() async {
     final result = await Navigator.push(
       context,
-      CupertinoPageRoute(builder: (context) => CreateTemplateScreen()),
+      CupertinoPageRoute(builder: (context) => const CreateTemplateScreen()),
     );
     if (result != null) {
       setState(() {
@@ -171,16 +173,16 @@ class _TemplatesScreenState extends State<TemplatesScreen>
     showCupertinoDialog(
       context: context,
       builder: (context) => CupertinoAlertDialog(
-        title: Text('Delete Template'),
+        title: const Text('Delete Template'),
         content: Text('Are you sure you want to delete "${template.name}"?'),
         actions: [
           CupertinoDialogAction(
-            child: Text('Cancel'),
+            child: const Text('Cancel'),
             onPressed: () => Navigator.pop(context),
           ),
           CupertinoDialogAction(
             isDestructiveAction: true,
-            child: Text('Delete'),
+            child: const Text('Delete'),
             onPressed: () {
               setState(() {
                 widget.templates.remove(template);
